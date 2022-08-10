@@ -1,0 +1,3 @@
+[submodule "landlock-functions"]
+	path = landlock-functions
+	url = https://github.com/ChrysoliteAzalea/landlock-functions
