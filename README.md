@@ -35,3 +35,5 @@ gcc sandboxed-prefix.c -lllwrapper -laddrule -lapparmor -lseccomp
 ``
 
 A build system support will be added later.
+
+# Warning! This is a purely experimental project that has not been tested in any real use-cases yet!
