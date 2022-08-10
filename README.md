@@ -6,14 +6,23 @@
 
 Firstly, you need to compile the shared libraries from the **landlock-functions** submodule. You can use these commands:
 
-``cd landlock-functions/
+``
+cd landlock-functions/
+``
 
+``
 gcc ll_wrapper.c -c -fpic -o ll_wrapper.o
+``
 
+``
 gcc ll_wrapper.o -shared -o libllwrapper.so
+``
 
+``
 gcc add_rule.c -c -fpic -o add_rule.o
+``
 
+``
 gcc add_rule.o -shared -o libaddrule.so
 ``
 
