@@ -1,20 +1,61 @@
 #define _GNU_SOURCE
 #define USE_APPARMOR
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <seccomp.h>
 #include <string.h>
 #include <fcntl.h>
 #include <sys/prctl.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 #include <linux/prctl.h>
 #include <linux/landlock.h>
 #ifdef USE_APPARMOR
 #include <sys/apparmor.h>
 #endif
 #include <errno.h>
-#include "ll_wrapper.h"
-#include "add_rule.h"
+
+int landlock_create_ruleset(struct landlock_ruleset_attr *rsattr,size_t size,__u32 flags) {
+	return syscall(__NR_landlock_create_ruleset,rsattr,size,flags);
+}
+
+int landlock_add_rule(int fd,enum landlock_rule_type t,void *attr,__u32 flags) {
+	return syscall(__NR_landlock_add_rule,fd,t,attr,flags);
+}
+
+int landlock_restrict_self(int fd,__u32 flags) {
+	return syscall(__NR_landlock_restrict_self,fd,flags);
+}
+
+int add_read_access_rule(int rset_fd,int allowed_fd) {
+	int result;
+	struct landlock_path_beneath_attr target;
+	target.parent_fd = allowed_fd;
+	target.allowed_access = LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR;
+	result = landlock_add_rule(rset_fd,LANDLOCK_RULE_PATH_BENEATH,&target,0);
+	return result;
+}
+
+int add_write_access_rule(int rset_fd,int allowed_fd,int restricted) {
+	int result;
+	struct landlock_path_beneath_attr target;
+	target.parent_fd = allowed_fd;
+	if (restricted==0) target.allowed_access = LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_REMOVE_FILE | LANDLOCK_ACCESS_FS_REMOVE_DIR | LANDLOCK_ACCESS_FS_MAKE_CHAR | LANDLOCK_ACCESS_FS_MAKE_DIR | LANDLOCK_ACCESS_FS_MAKE_REG | LANDLOCK_ACCESS_FS_MAKE_SOCK | LANDLOCK_ACCESS_FS_MAKE_FIFO | LANDLOCK_ACCESS_FS_MAKE_BLOCK | LANDLOCK_ACCESS_FS_MAKE_SYM;
+	else if (restricted==1) target.allowed_access = LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_REMOVE_FILE | LANDLOCK_ACCESS_FS_REMOVE_DIR | LANDLOCK_ACCESS_FS_MAKE_CHAR | LANDLOCK_ACCESS_FS_MAKE_DIR | LANDLOCK_ACCESS_FS_MAKE_REG | LANDLOCK_ACCESS_FS_MAKE_SYM;
+	result = landlock_add_rule(rset_fd,LANDLOCK_RULE_PATH_BENEATH,&target,0);
+	return result;
+}
+
+int add_execute_rule(int rset_fd,int allowed_fd) {
+	int result;
+	struct landlock_path_beneath_attr target;
+	target.parent_fd = allowed_fd;
+	target.allowed_access = LANDLOCK_ACCESS_FS_EXECUTE;
+	result = landlock_add_rule(rset_fd,LANDLOCK_RULE_PATH_BENEATH,&target,0);
+	return result;
+}
 
 void stop_error(int error_class) {
 	if (error_class==1) {

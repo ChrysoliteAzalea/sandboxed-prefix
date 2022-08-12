@@ -4,34 +4,10 @@
 
 ## Compiling
 
-Firstly, you need to compile the shared libraries from the **landlock-functions** submodule. You can use these commands:
+You can compile this program using the following command:
 
 ``
-cd landlock-functions/
-``
-
-``
-gcc ll_wrapper.c -c -fpic -o ll_wrapper.o
-``
-
-``
-gcc ll_wrapper.o -shared -o libllwrapper.so
-``
-
-``
-gcc add_rule.c -c -fpic -o add_rule.o
-``
-
-``
-gcc add_rule.o -shared -o libaddrule.so
-``
-
-These libraries can be placed in /usr/local/lib/ directory, so the program can compile and run correctly using these libraries.
-
-Then, you can compile the **sandboxed-prefix** itself, using the following command:
-
-``
-gcc sandboxed-prefix.c -lllwrapper -laddrule -lapparmor -lseccomp
+gcc sandboxed-prefix.c -lapparmor -lseccomp -o sandboxed-prefix
 ``
 
 A build system support will be added later.
