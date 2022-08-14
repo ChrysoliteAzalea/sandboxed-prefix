@@ -113,6 +113,26 @@ void populate_landlock_ruleset(int ruleset_fd) {
 	current_fd = open("/etc",O_PATH | O_CLOEXEC);
 	if (add_read_access_rule(ruleset_fd,current_fd)!=0) stop_error(2);
 	close(current_fd);
+	char *wine_dir = secure_getenv("WINEPREFIX");
+	if (wine_dir == NULL) {
+		char *home_dir = secure_getenv("HOME");
+		size_t path_l = strlen(home_dir);
+		char *wine_def = (char*)malloc((path_l+7)*sizeof(char));
+		strncpy(wine_def,home_dir,path_l);
+		strncat(wine_def,"/.wine",7);
+		current_fd = open(wine_def,O_PATH | O_CLOEXEC);
+		if (add_read_access_rule(ruleset_fd,current_fd)!=0) stop_error(2);
+		if (add_write_access_rule(ruleset_fd,current_fd,1)!=0) stop_error(2);
+		if (add_execute_rule(ruleset_fd,current_fd)!=0) stop_error(2);
+		close(current_fd);
+	}
+	else {
+		current_fd = open(wine_dir,O_PATH | O_CLOEXEC);
+		if (add_read_access_rule(ruleset_fd,current_fd)!=0) stop_error(2);
+		if (add_write_access_rule(ruleset_fd,current_fd,1)!=0) stop_error(2);
+		if (add_execute_rule(ruleset_fd,current_fd)!=0) stop_error(2);
+		close(current_fd);
+	}
 	return;
 }
 
